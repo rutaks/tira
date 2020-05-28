@@ -17,9 +17,12 @@ import rw.rutaks.tira.dto.auth.RegisterRequestDTO;
 import rw.rutaks.tira.dto.auth.ResetPasswordDTO;
 import rw.rutaks.tira.exception.EntityNotFoundException;
 import rw.rutaks.tira.exception.MismatchException;
+import rw.rutaks.tira.model.Account;
 import rw.rutaks.tira.model.Auth;
+import rw.rutaks.tira.model.Person;
 import rw.rutaks.tira.model.ResetPasswordToken;
 import rw.rutaks.tira.model.User;
+import rw.rutaks.tira.repo.AccountRepo;
 import rw.rutaks.tira.repo.AuthRepo;
 import rw.rutaks.tira.repo.ResetPasswordTokenRepo;
 import rw.rutaks.tira.repo.UserRepo;
@@ -28,16 +31,12 @@ import rw.rutaks.tira.util.DateUtil;
 @Service
 public class AuthService implements UserDetailsService {
 
-  @Autowired
-  PasswordEncoder passwordEncoder;
-  @Autowired
-  private AuthRepo authRepo;
-  @Autowired
-  private UserRepo userRepo;
-  @Autowired
-  private ResetPasswordTokenRepo resetPasswordTokenRepo;
-  @Autowired
-  private MailService mailService;
+  @Autowired PasswordEncoder passwordEncoder;
+  @Autowired private AuthRepo authRepo;
+  @Autowired private UserRepo userRepo;
+  @Autowired private AccountRepo accountRepo;
+  @Autowired private ResetPasswordTokenRepo resetPasswordTokenRepo;
+  @Autowired private MailService mailService;
 
   @Override
   public Auth loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -46,11 +45,13 @@ public class AuthService implements UserDetailsService {
     return auth.get();
   }
 
-  public User register(RegisterRequestDTO registerRequestDTO) throws Exception {
+  public Person register(RegisterRequestDTO registerRequestDTO) throws Exception {
     try {
       User user = userRepo.save(new User(registerRequestDTO));
       registerRequestDTO.setPassword(passwordEncoder.encode(registerRequestDTO.getPassword()));
       Auth auth = new Auth(registerRequestDTO, user, new ArrayList<>(Arrays.asList("ROLE_USER")));
+      Account account = new Account(user);
+      accountRepo.save(account);
       authRepo.save(auth);
       return user;
     } catch (Exception e) {
@@ -59,7 +60,6 @@ public class AuthService implements UserDetailsService {
   }
 
   public void resetPassword(String token, ResetPasswordDTO resetPasswordDTO) {
-    System.out.println(token);
     resetPasswordTokenRepo.findAll().forEach((r) -> System.out.println(r.getToken()));
     Optional<ResetPasswordToken> resetPasswordToken = resetPasswordTokenRepo.findByToken(token);
     resetPasswordToken.orElseThrow(
@@ -68,7 +68,8 @@ public class AuthService implements UserDetailsService {
     if (!resetPasswordDTO.getPassword().equals(resetPasswordDTO.getConfirmPassword())) {
       throw new MismatchException("Passwords do not match");
     }
-    //TODO: REFACTOR TO COMPARE CURRENT DATE WITH DB DATE. ISSUE IS THAT CURRENT DATE COMES IN `CAT` TIMEZONE AND COMPARISON FAILS
+    // TODO: REFACTOR TO COMPARE CURRENT DATE WITH DB DATE. ISSUE IS THAT CURRENT DATE COMES IN
+    // `CAT` TIMEZONE AND COMPARISON FAILS
     if (!resetPasswordToken.get().isActive()) {
       throw new DateTimeException("The Token has expired");
     }
@@ -89,7 +90,7 @@ public class AuthService implements UserDetailsService {
     Optional<User> user = userRepo.findByEmail(email);
     user.orElseThrow(() -> new EntityNotFoundException("Could not find user with email: " + email));
 
-    Optional<Auth> auth = authRepo.findByUser(user.get());
+    Optional<Auth> auth = authRepo.findByPerson(user.get());
     auth.orElseThrow(
         () -> new EntityNotFoundException("Could not find user auth account with email: " + email));
 

@@ -24,7 +24,7 @@ import rw.rutaks.tira.dto.auth.ResetPasswordDTO;
 import rw.rutaks.tira.exception.CustomAuthenticationException;
 import rw.rutaks.tira.model.ApiResponse;
 import rw.rutaks.tira.model.Auth;
-import rw.rutaks.tira.model.User;
+import rw.rutaks.tira.model.Person;
 import rw.rutaks.tira.service.AuthService;
 import rw.rutaks.tira.util.ErrorUtil;
 import rw.rutaks.tira.util.JwtUtil;
@@ -65,11 +65,11 @@ public class AuthController {
       BindingResult bindingResult)
       throws Exception {
     ErrorUtil.checkForError(bindingResult);
-    User user = userDetailsService.register(registerRequestDTO);
+    Person person = userDetailsService.register(registerRequestDTO);
     final Auth userDetails =
         userDetailsService.loadUserByUsername(registerRequestDTO.getUsername());
     final String jwt = jwtUtil.generateToken(userDetails);
-    final RegisterResponseDTO responseDTO = new RegisterResponseDTO(jwt, user);
+    final RegisterResponseDTO responseDTO = new RegisterResponseDTO(jwt, person);
     ApiResponse response = new ApiResponse(HttpStatus.OK, "Registration Successful", responseDTO);
     return ResponseEntity.status(response.getStatus()).body(response);
   }

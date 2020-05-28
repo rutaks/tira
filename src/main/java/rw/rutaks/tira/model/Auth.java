@@ -31,7 +31,7 @@ public class Auth implements UserDetails {
   @GeneratedValue(strategy = GenerationType.SEQUENCE)
   private long id;
 
-  @OneToOne private User user;
+  @OneToOne private Person person;
 
   private String username;
 
@@ -56,15 +56,15 @@ public class Auth implements UserDetails {
 
   public Auth() {}
 
-  public Auth(RegisterRequestDTO registerRequestDTO, User user, List<String> roles) {
-    this.user = user;
+  public Auth(RegisterRequestDTO registerRequestDTO, Person person, List<String> roles) {
+    this.person = person;
     this.username = registerRequestDTO.getUsername();
     this.password = registerRequestDTO.getPassword();
     this.roles = roles;
   }
 
-  public Auth(User user, String username, String password, List<String> roles) {
-    this.user = user;
+  public Auth(Person person, String username, String password, List<String> roles) {
+    this.person = person;
     this.username = username;
     this.password = password;
     this.roles = roles;

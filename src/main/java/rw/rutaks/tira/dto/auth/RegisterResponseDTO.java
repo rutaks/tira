@@ -2,16 +2,16 @@ package rw.rutaks.tira.dto.auth;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import rw.rutaks.tira.model.User;
+import rw.rutaks.tira.model.Person;
 
 @Data
 @NoArgsConstructor
 public class RegisterResponseDTO {
   private String jwt;
-  private User user;
+  private Person person;
 
-  public RegisterResponseDTO(String jwt, User user) {
+  public RegisterResponseDTO(String jwt, Person person) {
     this.jwt = jwt;
-    this.user = user;
+    this.person = person;
   }
 }
